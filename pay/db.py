@@ -9,7 +9,7 @@ def get_db_url() -> str:
     except KeyError:
         print(
             "'DB_URL' environment variable not found,",
-            "creating 'db.sql locally...'"
+            "creating 'db.sql' locally...'"
             )
         return "sqlite:///../db.sql"
 
