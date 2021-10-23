@@ -1,22 +1,36 @@
-from fastapi import FastAPI
-from routers import auth
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import FastAPI, HTTPException
+from fastapi.param_functions import Depends
+from sqlalchemy.orm import Session
 
+from schemas import User
+from models import RegisterUser
+from db import engine, SessionLocal, Base
+
+
+Base.metadata.create_all(bind=engine)
 app = FastAPI()
-app.include_router(auth.router)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-@app.on_event("startup")
-async def startup_db_client():
-    app.db_client = AsyncIOMotorClient("localhost:27017")
-    app.db = app.mongodb_client["Database"]
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    await app.db_client.close()
-
-
-@app.get("/", description="Index page")
+@app.get("/")
 async def root():
     return {"message": "Welcome"}
 
+@app.post("/register")
+async def register(user: RegisterUser, 
+                    db: Session = Depends(get_db)):
+    get_user = db.query(User).filter(User.public_key == user.public_key).first()
+    if get_user:
+        raise HTTPException(status_code=400, detail="Public key already registered")
+    else:
+        db_user = User(username=user.username, public_key = user.public_key)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
