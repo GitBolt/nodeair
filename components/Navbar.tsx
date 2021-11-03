@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { connectWallet, registerWallet } from '@/components/Wallet'
+import { registerWallet } from '@/components/Wallet'
 import styles from '@/styles/modules/Navbar.module.scss'
 
 export const Navbar = () => {
